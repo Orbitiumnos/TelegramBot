@@ -15,6 +15,11 @@ import logging
 from telebot import apihelper
 from telebot import types
 
+import pickle
+import feedparser
+from time import sleep
+
+
 logger = logging.getLogger('log')
 logger.setLevel(logging.INFO)
 fh = logging.FileHandler('someTestBot.log')
@@ -25,6 +30,9 @@ logger.addHandler(fh)
 
 PROXY = 'socks5h://geek:socks@t.geekclass.ru:7777' #'socks5h://telegram.vpn99.net:55655' #'socks5://login:pass@12.11.22.33:8000'
 apihelper.proxy = {'https': PROXY}
+feed_list =["http://baikalinform.ru/obyavki-rss",]
+#last_feeds = pickle.load(open(r'C:/Users/Nikolay/Documents/SCRIPTS/Python Scripts/TelegramBot/db.p', 'rb'))
+fee_links = []
 
 def check():
     proxies = {'http': 'http://10.10.1.10:3128','https': 'http://10.10.1.10:1080',}
@@ -41,6 +49,7 @@ bot = telebot.TeleBot(config2.TOKEN)
 
 ### Функция проверки авторизации
 
+'''
 def autor(chatid):
     strid = str(chatid)
     users = ['id-user1','id-user2']
@@ -48,23 +57,16 @@ def autor(chatid):
         #if item == strid:
     return True
     #return False
+'''
 
 ### Функция приветствия
 @bot.message_handler(commands=['start'])
 def start_message(message):
-    if autor(message.chat.id):
-        cid = message.chat.id
-        message_text = message.text
-        user_id = message.from_user.id
-        user_name = message.from_user.first_name
-        #mention = "[" + user_name + "](tg://user?id=" + str(user_id) + ")"
-        bot.send_message(message.chat.id,'Привет, ' + user_name + ' Я могу показывать курсы валют!\n' +
-        'Чтобы получить курсы валют, нажми кнопку /exchange.\n' +
-        'Если нужна помощь, напиши /help.', reply_markup=keyboard1)
-        bot.send_sticker(message.chat.id, 'CAADAgAD6CQAAp7OCwABx40TskPHi3MWBA')
-    else:
-        bot.send_message(message.chat.id, 'Тебе сюда нельзя. Твой ID: ' + str(message.chat.id))
-        bot.send_sticker(message.chat.id, 'CAADAgADcQMAAkmH9Av0tmQ7QhjxLRYE')
+    user_name = message.from_user.first_name
+    bot.send_message(message.chat.id,'Привет, ' + user_name + '! Я могу показывать курсы валют!\n' +
+    'Чтобы получить курсы валют, нажми кнопку /exchange.\n' +
+    'Если нужна помощь, напиши /help.')
+    bot.send_sticker(message.chat.id, 'CAADAgAD6CQAAp7OCwABx40TskPHi3MWBA')
 
 ### Функция help
 @bot.message_handler(commands=['help'])
@@ -77,44 +79,17 @@ def help_command(message):
         message.chat.id,
         '1) Чтобы получить курс валют нажми на /exchange.\n' +
         '2) Выбери интересующую валюту.\n' +
-        '3) Нажми “Обновить” чтобы получить обновить информацию. \n' +
+        '3) Нажми “Обновить” чтобы обновить информацию. \n' +
         '4) Бот поддерживает ссылки. Напиши @OrbiBot в любом чате и наименование валюты.',
         reply_markup=keyboard
     )
 
 ### Клавиатура
-#keyboard1 = telebot.types.ReplyKeyboardMarkup()
-#keyboard1.row('Привет', 'Пока')
 
-### Прием документов
-@bot.message_handler(content_types=['document'])
-def handle_docs_photo(message):
-    try:
-        chat_id = message.chat.id
+'''
+keyboard1 = telebot.types.ReplyKeyboardMarkup()
+keyboard1.row('Привет', 'Пока')
 
-        file_info = bot.get_file(message.document.file_id)
-        downloaded_file = bot.download_file(file_info.file_path)
-
-        src = r'C:\Users\Nikolay\Documents\SCRIPTS\Python Scripts\TelegramBot/' + message.document.file_name;
-        with open(src, 'wb') as new_file:
-            new_file.write(downloaded_file)
-        bot.reply_to(message, "Пожалуй, я сохраню это")
-    except Exception as e:
-        bot.reply_to(message, e)
-
-### Прием фото
-@bot.message_handler(content_types=['photo'])
-def handle_docs_photo(message):
-    try:
-        chat_id = message.chat.id
-        file_info = bot.get_file(message.photo[len(message.photo) - 1].file_id)
-        downloaded_file = bot.download_file(file_info.file_path)
-        src = r'C:\Users\Nikolay\Documents\SCRIPTS\Python Scripts\TelegramBot/' + file_info.file_path;
-        with open(src, 'wb') as new_file:
-            new_file.write(downloaded_file)
-        bot.reply_to(message, "Фото добавлено")
-    except Exception as e:
-        bot.reply_to(message, e)
 
 @bot.message_handler(content_types=['text'])
 def send_text(message):
@@ -125,20 +100,50 @@ def send_text(message):
             bot.send_message(message.chat.id, 'Прощай, создатель', reply_markup=keyboard1)
         elif message.text == 'Пока':
             bot.send_message(message.chat.id, 'Я тебя не понимаю. Напиши /help', reply_markup=keyboard1)
+'''
+
+
+### Прием документов
+@bot.message_handler(content_types=['document'])
+def handle_docs_photo(message):
+    try:
+        chat_id = message.chat.id
+
+        file_info = bot.get_file(message.document.file_id)
+        downloaded_file = bot.download_file(file_info.file_path)
+
+        src = r'C:/Users/Nikolay/Documents/SCRIPTS/Python Script/TelegramBot/' + message.document.file_name;
+        with open(src, 'wb') as new_file:
+            new_file.write(downloaded_file)
+        bot.reply_to(message, 'Документ сохранен')
+    except Exception as e:
+        bot.reply_to(message, e)
+
+### Прием фото
+@bot.message_handler(content_types=['photo'])
+def handle_docs_photo(message):
+    try:
+        chat_id = message.chat.id
+        file_info = bot.get_file(message.photo[len(message.photo) - 1].file_id)
+        downloaded_file = bot.download_file(file_info.file_path)
+        src = r'C:/Users/Nikolay/Documents/SCRIPTS/Python Scripts/TelegramBot/' + file_info.file_path;
+        with open(src, 'wb') as new_file:
+            new_file.write(downloaded_file)
+        bot.reply_to(message, "Фото добавлено")
+    except Exception as e:
+        bot.reply_to(message, e)
 
 @bot.message_handler(commands=['exchange'])
 def exchange_command(message):
     keyboard = telebot.types.InlineKeyboardMarkup()
     keyboard.row(
-        telebot.types.InlineKeyboardButton('USD', callback_data='get-USD')
-    )
-    keyboard.row(
+        telebot.types.InlineKeyboardButton('USD', callback_data='get-USD'),
         telebot.types.InlineKeyboardButton('EUR', callback_data='get-EUR'),
         telebot.types.InlineKeyboardButton('RUR', callback_data='get-RUR')
     )
     bot.send_message(
         message.chat.id,
-        'Click on the currency of choice:',
+        'Кликни на интересующую валюту:',
         reply_markup=keyboard
     )
 
@@ -279,4 +284,26 @@ def get_iq_articles(exchanges):
         )
     return result
 
+@bot.message_handler(commands=['news'])
+def feederek(message):
+    for i in feed_list:
+        fee = feedparser.parse(i)
+        fee_title = fee.feed.title
+        for x in range(10):
+            fee_links.append(fee['entries'][x]['id'])
+            #if fee['entries'][x]['id'] in last_feeds:
+            #    pbot.send_message(message.chat.id,"Nothing new - " + fee_title)
+            #else:
+            sleep(5)
+            entry_title = fee['entries'][x]['title']
+            entry_id = fee['entries'][x]['id']
+            bot.send_message(message.chat.id,"Updated - " + fee_title)
+
+            text = str(entry_title +"\n" + entry_id)
+            bot.send_message(message.chat.id, text)
+
+    pickle.dump(fee_links, open("C:/Users/Nikolay/Documents/SCRIPTS/Python Scripts/TelegramBot/db.p", 'wb'))
+    return
+
 bot.polling(none_stop=True, interval=0)
+#сообщения посылаются методом getupdates. nonestop означает что вопросы будут возвращаться, даже если api возвращает ошибку при выполнении
