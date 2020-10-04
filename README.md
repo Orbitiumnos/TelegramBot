@@ -1,3 +1,3 @@
 # TelegramBot
 
-# Not for my family on raspberry pi 3
+Bot for my family on raspberry pi 3
